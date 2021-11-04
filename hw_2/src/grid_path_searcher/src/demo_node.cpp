@@ -282,5 +282,6 @@ void visVisitedNode( vector<Vector3d> nodes )
         node_vis.points.push_back(pt);
     }
 
-    _visited_nodes_vis_pub.publish(node_vis);
+    // TODO
+    // _visited_nodes_vis_pub.publish(node_vis);
 }

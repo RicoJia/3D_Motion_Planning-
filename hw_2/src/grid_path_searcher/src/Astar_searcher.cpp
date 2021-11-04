@@ -153,8 +153,10 @@ inline void AstarPathFinder::AstarGetSucc(GridNodePtr currentPtr, vector<GridNod
     auto z = index(2); 
     for(int i = std::max(0, x - 1); i < std::min(GLX_SIZE, x + 2); ++i){
       for(int j = std::max(0, y - 1); j < std::min(GLY_SIZE, y + 2); ++j){      
-        for(int k = std::max(0, z - 1); k < std::min(GLZ_SIZE, z + 2); ++k){      
-          if(x != i && y != j; z != k){
+          //TODO-1 2D case
+          int k = z; 
+        // for(int k = std::max(0, z - 1); k < std::min(GLZ_SIZE, z + 2); ++k){      
+          if(x != i || y != j || z != k){
             neighborPtrSets.emplace_back(GridNodeMap[i][j][k]); 
             // RICO: here we make Euclidean Distance the real cost, g(x) larger than any heuristics
             if (isOccupied(i, j, k)){
@@ -165,7 +167,7 @@ inline void AstarPathFinder::AstarGetSucc(GridNodePtr currentPtr, vector<GridNod
 
             }
           }
-        }
+        // }
       }
     }
 }
@@ -203,6 +205,10 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
 {   
     ros::Time time_1 = ros::Time::now();    
 
+    //TODO-1 2D case
+    end_pt(2) = 0; 
+    start_pt(2) = 0; 
+
     //index of start_point and end_point
     Vector3i start_idx = coord2gridIndex(start_pt);
     Vector3i end_idx   = coord2gridIndex(end_pt);
@@ -227,7 +233,7 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
     startPtr -> fScore = getHeu(startPtr,endPtr);   
     //STEP 1: finish the AstarPathFinder::getHeu , which is the heuristic function
     startPtr -> id = 1; 
-    startPtr -> coord = start_pt;   //TODO: not necessary?
+    // startPtr -> coord = start_pt;   //TODO: not necessary?
     openSet.insert( make_pair(startPtr -> fScore, startPtr) );
     // STEP 2 :  some else preparatory works which should be done before while loop. TODO
     vector<GridNodePtr> neighborPtrSets;
@@ -236,18 +242,15 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
     // this is the main loop
     while ( !openSet.empty() ){
         // step 3: Remove the node with lowest cost function from open set to closed set. 
-        currentPtr = std::prev(openSet.end()) -> second; 
+        currentPtr = openSet.begin() -> second; 
         currentPtr -> id = -1;
-        //TODO
-        cout<<"currentPtr: "<<currentPtr->coord<<" | cost: "<<openSet.rend()->first<<endl;
-        openSet.erase(std::prev(openSet.end()));
+        openSet.erase(openSet.begin());
 
         // if the current node is the goal, return and back track
         if( currentPtr->index == goalIdx ){
             ros::Time time_2 = ros::Time::now();
             terminatePtr = currentPtr;
             ROS_WARN("[A*]{sucess}  Time in A*  is %f ms, path cost if %f m", (time_2 - time_1).toSec() * 1000.0, currentPtr->gScore * resolution );            
-            std::cout<<__FUNCTION__<<"1"<<std::endl; 
             return;
         }
         //STEP 4: finish AstarPathFinder::AstarGetSucc yourself
@@ -267,22 +270,18 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
             neighborPtrSets[i]->id = -1 : expanded, equal to this node is in close set
             neighborPtrSets[i]->id = 1 : unexpanded, equal to this node is in open set
             */
-          neighborPtr = neighborPtrSets.at(i); 
+            neighborPtr = neighborPtrSets.at(i); 
             if (neighborPtr -> id == -1){
-              //TODO
-              std::cout<<__FUNCTION__<<"2"<<std::endl; 
                 continue; 
             }
             double g_new = currentPtr -> gScore + edgeCostSets.at(i); 
-            //TODO
-            cout<<"gnew: "<<g_new<<" | current: "<<neighborPtr -> gScore<<endl;
 
             if (g_new < neighborPtr -> gScore){
               neighborPtr -> gScore = g_new; 
               neighborPtr -> cameFrom = currentPtr; 
               if (neighborPtr -> id == 0){
-                //TODO
-                std::cout<<__FUNCTION__<<"3"<<std::endl; 
+                // //TODO
+                // std::cout<<__FUNCTION__<<"3"<<std::endl; 
                 // This is a new node. Add to open set and flip its status to 1
                 double total_cost = neighborPtr -> gScore + getHeu(neighborPtr, endPtr); 
                 openSet.insert(std::make_pair(total_cost, neighborPtr)); 

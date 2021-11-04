@@ -29,7 +29,6 @@ struct GridNode
         dir   = Eigen::Vector3i::Zero();
 
         gScore = inf;
-        std::cout<<"gscore: "<<gScore<<std::endl;
         fScore = inf;
         cameFrom = NULL;
     }
