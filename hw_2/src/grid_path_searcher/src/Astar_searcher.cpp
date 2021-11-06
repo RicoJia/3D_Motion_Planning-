@@ -153,9 +153,9 @@ inline void AstarPathFinder::AstarGetSucc(GridNodePtr currentPtr, vector<GridNod
     auto z = index(2); 
     for(int i = std::max(0, x - 1); i < std::min(GLX_SIZE, x + 2); ++i){
       for(int j = std::max(0, y - 1); j < std::min(GLY_SIZE, y + 2); ++j){      
-          //TODO-1 2D case
-          int k = z; 
-        // for(int k = std::max(0, z - 1); k < std::min(GLZ_SIZE, z + 2); ++k){      
+          // //TODO-1 2D case
+          // int k = z; 
+        for(int k = std::max(0, z - 1); k < std::min(GLZ_SIZE, z + 2); ++k){      
           if(x != i || y != j || z != k){
             neighborPtrSets.emplace_back(GridNodeMap[i][j][k]); 
             // RICO: here we make Euclidean Distance the real cost, g(x) larger than any heuristics
@@ -167,7 +167,7 @@ inline void AstarPathFinder::AstarGetSucc(GridNodePtr currentPtr, vector<GridNod
 
             }
           }
-        // }
+        }
       }
     }
 }
@@ -185,13 +185,16 @@ double AstarPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2)
     auto diff = node1->coord - node2->coord;
     auto diff_abs = (diff.array().abs());
     
+    // Manhattan
+    // h_x = diff_abs.sum();
+
     // H(x)1: Euclidean
     h_x = diff.norm();
   
     // // H(x)2: StraightLine (for 2D)
     // h_x = diff.norm() + 0.01 * abs(diff_abs(0) * diff_abs(1) - diff_abs(1)*diff_abs(0));
     //
-    // // Best Heuristics: h_x = |dx| + |dy| + |dx| + min(|dx|, |dy|, |dz|) * (2-sqrt(2))
+    // Best Heuristics: h_x = |dx| + |dy| + |dx| + min(|dx|, |dy|, |dz|) * (2-sqrt(2)) (diagonal)
     // h_x = diff_abs.sum() + diff_abs.minCoeff()* (sqrt(2) - 2);
     //
     // // H(x)3: Dijkstra
@@ -206,8 +209,8 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
     ros::Time time_1 = ros::Time::now();    
 
     //TODO-1 2D case
-    end_pt(2) = 0; 
-    start_pt(2) = 0; 
+    // end_pt(2) = 0; 
+    // start_pt(2) = 0; 
 
     //index of start_point and end_point
     Vector3i start_idx = coord2gridIndex(start_pt);
@@ -233,7 +236,6 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
     startPtr -> fScore = getHeu(startPtr,endPtr);   
     //STEP 1: finish the AstarPathFinder::getHeu , which is the heuristic function
     startPtr -> id = 1; 
-    // startPtr -> coord = start_pt;   //TODO: not necessary?
     openSet.insert( make_pair(startPtr -> fScore, startPtr) );
     // STEP 2 :  some else preparatory works which should be done before while loop. TODO
     vector<GridNodePtr> neighborPtrSets;

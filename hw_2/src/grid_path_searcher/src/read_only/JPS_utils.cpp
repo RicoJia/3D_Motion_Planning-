@@ -1,6 +1,8 @@
 #include "JPS_utils.h"
 
 constexpr int JPS3DNeib::nsz[4][2];
+// norm here identifies what kind of direction it is: 3D diagonal, 2D diagonal, 1D line, in a 3*3*3 cube
+// nsz[norm][]
 JPS3DNeib::JPS3DNeib() 
 {
     int id = 0;
@@ -25,6 +27,9 @@ JPS3DNeib::JPS3DNeib()
 }
 
 
+// norm1: See below
+// dev: Some sort of id of a cell in the 3*3*3 neighborhood?
+// writes direction to tx, ty, tz
 void JPS3DNeib::Neib(int dx, int dy, int dz, int norm1, int dev,
     int& tx, int& ty, int& tz)
 {

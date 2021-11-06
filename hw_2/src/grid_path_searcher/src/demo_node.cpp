@@ -117,6 +117,7 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
     auto visited_nodes = _astar_path_finder->getVisitedNodes();
 
     //Visualize the result
+    // TODO
     visGridPath (grid_path, false);
     visVisitedNode(visited_nodes);
 
@@ -124,7 +125,7 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
     _astar_path_finder->resetUsedGrids();
 
     //you just need to change the #define value of _use_jps
-#define _use_jps 0
+#define _use_jps 1
 #if _use_jps
     {
         //Call JPS to search for a path
@@ -282,6 +283,5 @@ void visVisitedNode( vector<Vector3d> nodes )
         node_vis.points.push_back(pt);
     }
 
-    // TODO
-    // _visited_nodes_vis_pub.publish(node_vis);
+    _visited_nodes_vis_pub.publish(node_vis);
 }
