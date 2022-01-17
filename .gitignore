@@ -10,3 +10,4 @@ devel
 install
 rosserial
 libraries
+armadillo-9.870.2/*

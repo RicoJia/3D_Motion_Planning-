@@ -26,7 +26,6 @@ function global_best = pso_select(theta,omega,v_ini,p0,last_theta,last_v)
             % weight of the particle, decreases as coming near the end of the iter
             w = 0.95-(0.95-0.4)/iter*j;
             if (j~=1)
-                % TODO
                 %update the particle position for the i'th particle
                 k1 = 1; 
                 k2 = 1; 
@@ -35,7 +34,6 @@ function global_best = pso_select(theta,omega,v_ini,p0,last_theta,last_v)
                 P(i, 1) = P(i, 1) + P(i,3); 
                 P(i, 2) = P(i, 2) + P(i,4);
             end
-            % TODO
             %evaluate the particles
             cost = evaluate(R,omega,p0,P(i,1),last_theta-theta,v_ini,P(i,2));
         
