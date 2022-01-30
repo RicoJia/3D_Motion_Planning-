@@ -17,6 +17,11 @@ This package includes:
 - so3_control: converts control commands to actual control variables. 
 - quadrotor_simulator_so3: model of a quadrotor. 
 
+Specifically, trajectory_generator_node is the main planning node with the following inputs and outputs: 
+<p align="center">
+<img src="https://user-images.githubusercontent.com/39393023/149847480-1ca9ffdb-4af1-49ff-b815-851e0f745191.png""" height="300" width="width"/>
+</p>
+
 ## Installations & Dependencies
 1. Dependencies
     ```bash
@@ -35,12 +40,40 @@ This package includes:
     ```
 
 ## Notes
-1. Flowchart 
+1. Workflow
+    - Planning and execution strategy: 
+        1. Plan a global path 
+        2. In the locally visible range ```psi_p```, we plan a local trajectory
+        3. However due to sensor noises, we have a relatively reliable "executable" range ```psi_e```, in which we actually execute the local plan
+        4. Once we step outside ```psi_e```, we will replan. Also, we check if there are any collisions. In real time. If there is, we also replan
+            <p align="center">
+            <img src="https://user-images.githubusercontent.com/39393023/149848967-7c0d88d8-1d43-45c7-9f85-d3e9c4178dd0.png""" height="200" width="width"/>
+            </p>
+    - Flowchart
+        <p align="center">
+        <img src="https://user-images.githubusercontent.com/39393023/149856794-67b3449a-082b-45df-831d-6f10ce2cfcb7.png""" height="500" width="width"/>
+        </p>
+
 2. Demo 
+
 3. Performance Comparison
     - ```A*``` vs ```simplified path```
     - ```trajectory reoptimization``` 
     - Other
+
+4. Bonus: 
+    - Simulation Model of the quadrotor
+    - traj server: what inputs& outputs
+
+5. Side Notes For Developers
+    1. We use Ramer–Douglas–Peucker_algorithm (RDP) to reduce the size of A* waypoints. 
+        - However, after size reduction, we may end up with segments hitting obstacles. 
+        - For that, we can hypothetically shoot out rays from the start point to each waypoint and check for obstacles. 
+        - The last fallback is to insert more waypoints and replan
+    2. Replanning is triggered currently by time (replan_time) rather than position. Also, we currently don't check for almost hitting obstacles. 
+        - This is okay because A* and minimum snap is fast enough for mostly static environments
+    3. We assume regions outside of maps to be occupied by obstacles. 
+    4. Due to the coupling in car dynamics (differential drive and Ackerman Steering), minimum snap must be modified. 
 
 ## TODO
 1. 阅读代码：画出trajectory_generator_node运行流程图，重点是厘清

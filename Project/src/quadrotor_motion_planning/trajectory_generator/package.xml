@@ -1,12 +1,11 @@
 <package>
-  <version>0.0.0</version>
+  <version>0.0.1</version>
   <name>trajectory_generator</name>
   <description>
-
      trajectory_generator
-
   </description>
   <maintainer email="fgaoaa@connect.ust.hk">Fei Gao</maintainer>
+  <maintainer email="ruotongjia2020@u.northwestern.edu">Rico Jia</maintainer>
   <license>BSD</license>
   <url>http://ros.org/wiki/waypoint_generator</url>
 

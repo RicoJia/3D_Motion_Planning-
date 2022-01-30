@@ -85,6 +85,7 @@ Vector3d getVel(double t_cur);
 void changeState(STATE new_state, string pos_call) {
   string state_str[5] = {"INIT", "WAIT_TARGET", "GEN_NEW_TRAJ", "EXEC_TRAJ",
                          "REPLAN_TRAJ"};
+  // global variable exec_state
   int pre_s = int(exec_state);
   exec_state = new_state;
   cout << "[" + pos_call + "]: from " + state_str[pre_s] + " to " +
@@ -114,6 +115,7 @@ void rcvOdomCallback(const nav_msgs::Odometry::ConstPtr &odom) {
 void execCallback(const ros::TimerEvent &e) {
   static int num = 0;
   num++;
+  // every second print if there's odom
   if (num == 100) {
     printState();
     if (!has_odom)
@@ -124,6 +126,7 @@ void execCallback(const ros::TimerEvent &e) {
   }
 
   switch (exec_state) {
+  // move to wait when we have odom and target
   case INIT: {
     if (!has_odom)
       return;
