@@ -242,6 +242,8 @@ void traj_start_trigger_callback(const geometry_msgs::PoseStamped& msg) {
     }
 }
 
+// Other than manual Lonely mode, other waypoints generation may be useless. 
+
 int main(int argc, char** argv) {
     ros::init(argc, argv, "waypoint_generator");
     ros::NodeHandle n("~");
