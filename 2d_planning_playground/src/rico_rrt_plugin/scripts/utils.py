@@ -74,8 +74,9 @@ class WindowManager(object):
         """
         Function for showing newly added points and their parents
         """
-        for new_ptr_pair in new_pt_pairs: 
-            draw_line(self.canvas_map, new_ptr_pair[0], new_ptr_pair[1])
+        for new_pt_pair in new_pt_pairs: 
+            if new_pt_pair:
+                draw_line(self.canvas_map, new_pt_pair[0], new_pt_pair[1])
         WindowManager.show_map(self.canvas_map, wait_time)
 
     @staticmethod
