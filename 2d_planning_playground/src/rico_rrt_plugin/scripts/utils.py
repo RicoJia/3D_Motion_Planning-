@@ -85,7 +85,7 @@ class WindowManager(object):
 
 
 # Kdtree
-# https://github.com/Vectorized/Python-KD-Tree/blob/master/kdtree.py
+# Adopted from https://github.com/Vectorized/Python-KD-Tree/blob/master/kdtree.py
 # Makes the KD-Tree for fast lookup: [[smaller half], [larger half], root]
 def dist(p1, p2): 
     return np.linalg.norm(np.array(p1) - np.array(p2))
@@ -115,7 +115,6 @@ def add_point(kd_node, point, dim, i=0):
             elif c:
                 add_point(kd_node[j], point, dim, i)
 
-#TODO
 # k nearest neighbors
 def get_knn(kd_node, point, k, dim, dist_func = dist, return_distances=True, i=0, heap=None):
     import heapq
@@ -156,7 +155,7 @@ def get_nearest(kd_node, point, dim, dist_func=dist, return_distances=True, i=0,
 
 
 if __name__ == "__main__": 
-    # kd tree test functions 
+    # kd tree test 
     points = [[1,0,0], [0,1,0], [0,0,1]]
     kd_tree = make_kd_tree(points, dim = len(points[0]))
     print(get_nearest(kd_tree, [0.2, 0, 0], dim = len(points[0])))
