@@ -110,7 +110,7 @@ class RRTConnect(RRT):
         path = [bridge]
         path+=(self.backtrack(bridge[0]))
         path+=(self.backtrack(bridge[1]))
-        self.window_mgr.show_new_edges(path, 10000)
+        self.window_mgr.show_new_edges(path, 10000, final_show = True)
 
     def plan_one_iteration(self): 
         random_pt = generate_random_point(self.dim, self.lower_bounds, self.upper_bounds)

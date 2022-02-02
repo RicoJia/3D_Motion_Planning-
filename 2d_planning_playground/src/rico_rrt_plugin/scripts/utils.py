@@ -14,9 +14,8 @@ WINDOW_NAME = "RRT demo"
 def generate_random_point(dim, upper_bounds, lower_bounds): 
     return np.random.uniform(np.array(lower_bounds), np.array(upper_bounds)).astype(int)
 
-def draw_line(mp:np.ndarray, start, end): 
+def draw_line(mp:np.ndarray, start, end, color=255): 
     # color = (0, 255, 0)
-    color = 125
     thickness = 1
     image = cv2.line(mp, tuple(start), tuple(end), color, thickness)
     return image
@@ -52,7 +51,8 @@ class WindowManager(object):
     """Managing visualize windows"""
     def __init__(self, canvas_map):
         cv2.namedWindow(WINDOW_NAME)
-        self.canvas_map = np.copy(canvas_map)
+        self.canvas_map = cv2.cvtColor(np.copy(canvas_map), cv2.COLOR_GRAY2BGR) 
+        
     def __del__(self): 
         cv2.destroyAllWindows()
     def get_start_goal(self): 
@@ -62,21 +62,30 @@ class WindowManager(object):
         pts = []
         def click_pt(event, x_temp, y_temp, flags, params): 
             if event == cv2.EVENT_LBUTTONDOWN:
+                # cv2.circle(image, tuple(uv), int(0.5 * det.size * self.pixels_per_meter), color=(0, 0, 255), thickness=2)
+                cv2.circle(self.canvas_map, (x_temp, y_temp), 2, (255, 255, 0), thickness=2)
                 pts.append(np.array([x_temp, y_temp]))
 
         cv2.setMouseCallback(WINDOW_NAME, click_pt) 
 
         while len(pts) < 2: 
             WindowManager.show_map(self.canvas_map, 10)
+        self.canvas_map_final = np.copy(self.canvas_map)
         return pts
 
-    def show_new_edges(self, new_pt_pairs: list, wait_time = 100): 
+    def show_new_edges(self, new_pt_pairs: list, wait_time = 100, final_show = False): 
         """
         Function for showing newly added points and their parents
         """
+        if final_show: 
+            self.canvas_map = self.canvas_map_final
+            color = (0, 255, 0)
+        else: 
+            color = (0, 0, 255)
+
         for new_pt_pair in new_pt_pairs: 
             if new_pt_pair:
-                draw_line(self.canvas_map, new_pt_pair[0], new_pt_pair[1])
+                draw_line(self.canvas_map, new_pt_pair[0], new_pt_pair[1], color = color)
         WindowManager.show_map(self.canvas_map, wait_time)
 
     @staticmethod
