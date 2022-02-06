@@ -8,8 +8,10 @@ import numpy as np
 from PIL import Image
 import cv2
 from time import sleep
+from itertools import count
 
 WINDOW_NAME = "RRT demo"
+ESC = 27
 
 def generate_random_point(dim, upper_bounds, lower_bounds): 
     return np.random.uniform(np.array(lower_bounds), np.array(upper_bounds)).astype(int)
@@ -41,10 +43,13 @@ def is_within_boundary(row_num, column_num, pt):
 
 def load_map():
     DARK_THRE = 100
+    # PIC_FILE_PATH = './maze.jpeg'
+    # PIC_FILE_PATH = './checker.png'
     PIC_FILE_PATH = './obstacle2.jpg'
     img = cv2.imread(PIC_FILE_PATH, cv2.IMREAD_GRAYSCALE)
     # Caution: in this case we want white space to be free space
     _, img = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY_INV)
+    img = cv2.resize(img, (1000, 1000), interpolation = cv2.INTER_AREA)
     return img
 
 class WindowManager(object):
@@ -62,7 +67,6 @@ class WindowManager(object):
         pts = []
         def click_pt(event, x_temp, y_temp, flags, params): 
             if event == cv2.EVENT_LBUTTONDOWN:
-                # cv2.circle(image, tuple(uv), int(0.5 * det.size * self.pixels_per_meter), color=(0, 0, 255), thickness=2)
                 cv2.circle(self.canvas_map, (x_temp, y_temp), 2, (255, 255, 0), thickness=2)
                 pts.append(np.array([x_temp, y_temp]))
 
@@ -86,12 +90,40 @@ class WindowManager(object):
         for new_pt_pair in new_pt_pairs: 
             if new_pt_pair:
                 draw_line(self.canvas_map, new_pt_pair[0], new_pt_pair[1], color = color)
-        WindowManager.show_map(self.canvas_map, wait_time)
+                cv2.circle(self.canvas_map, tuple(new_pt_pair[1]), 2, (0, 255, 255), thickness=1)
+        key = WindowManager.show_map(self.canvas_map, wait_time)
+        return key == ESC
+
+    def show_all_edges(self, lookup: dict, wait_time = 100, final_show = False):
+        """Function for showing all edges in a map, specifically for RRT Star
+
+        :lookup: look up dictionary {coord (bytes): [parent_coords, ...] }
+        :wait_time: live time for cv2 window
+        :final_show: TODO
+        :returns: TODO
+
+        """
+        self.canvas_map = np.copy(self.canvas_map_final)
+        if final_show: 
+            color = (0, 255, 0)
+        else: 
+            color = (0, 0, 255)
+
+        for key, val in lookup.items(): 
+            if val[0] is not None: 
+                draw_line(self.canvas_map, np.frombuffer(key, dtype=int), val[0], color = color)
+                cv2.circle(self.canvas_map, tuple(np.frombuffer(key, dtype=int)), 2, (0, 255, 255), thickness=1)
+                # self.canvas_map = cv2.putText(self.canvas_map, f"{np.frombuffer(key, dtype=int)}",                                        tuple(np.frombuffer(key, dtype=int)), cv2.FONT_HERSHEY_PLAIN, 
+                #                         1, (0, 255, 0), 1, cv2.LINE_AA)
+
+        key = WindowManager.show_map(self.canvas_map, wait_time)
+        return key == ESC
 
     @staticmethod
     def show_map(mp: np.ndarray, wait_time=0):
         cv2.imshow(WINDOW_NAME, mp)
-        cv2.waitKey(wait_time)
+        key = cv2.waitKey(wait_time)
+        return key
 
 
 # Kdtree
@@ -126,7 +158,11 @@ def add_point(kd_node, point, dim, i=0):
                 add_point(kd_node[j], point, dim, i)
 
 # k nearest neighbors
+counter = count()
 def get_knn(kd_node, point, k, dim, dist_func = dist, return_distances=True, i=0, heap=None):
+    """
+    [[dist, count, new_pt]...]
+    """
     import heapq
     is_root = not heap
     if is_root:
@@ -135,19 +171,19 @@ def get_knn(kd_node, point, k, dim, dist_func = dist, return_distances=True, i=0
         dist = dist_func(point, kd_node[2])
         dx = kd_node[2][i] - point[i]
         if len(heap) < k:
-            heapq.heappush(heap, (-dist, kd_node[2]))
+            heapq.heappush(heap, (-dist, next(counter), kd_node[2]))
         elif dist < -heap[0][0]:
-            heapq.heappushpop(heap, (-dist, kd_node[2]))
+            heapq.heappushpop(heap, (-dist, next(counter), kd_node[2]))
         i = (i + 1) % dim
-        # Goes into the left branch, and then the right branch if needed
+        # Goes into the left branch (kd_node[0]), and then the right branch if needed kd_node[1]
         for b in [dx < 0] + [dx >= 0] * (dx * dx < -heap[0][0]):
             get_knn(kd_node[b], point, k, dim, dist_func, return_distances, i, heap)
     if is_root:
-        neighbors = sorted((-h[0], h[1]) for h in heap)
-        return neighbors if return_distances else [n[1] for n in neighbors]
-
+        neighbors = sorted([(-h[0], h[1], h[2]) for h in heap], key=lambda x: x[0])
+        return [(n[0], n[2]) for n in neighbors] if return_distances else [n[2] for n in neighbors]
 
 # Simple and efficient implementation: 1. search the area that contains the target 2. Search the rest of the area. Quit once the the best possible (dx * dx) is greater than the existing best.
+# TODO: might be buggy
 def get_nearest(kd_node, point, dim, dist_func=dist, return_distances=True, i=0, best=None):
     if kd_node is not None:
         dist = dist_func(point, kd_node[2])
@@ -166,9 +202,7 @@ def get_nearest(kd_node, point, dim, dist_func=dist, return_distances=True, i=0,
 
 if __name__ == "__main__": 
     # kd tree test 
-    points = [[1,0,0], [0,1,0], [0,0,1]]
-    kd_tree = make_kd_tree(points, dim = len(points[0]))
-    print(get_nearest(kd_tree, [0.2, 0, 0], dim = len(points[0])))
-    add_point(kd_tree, [0.2, 0, 0], dim = 3)
-    print(get_nearest(kd_tree, [0.5, 0, 0], dim = len(points[0])))
-
+    from numpy import array
+    kd_tree = [[[None, [None, None, array([355, 529])], array([334, 561])], None, array([354, 568])], [[None, [[None, [[None, [[None, None, array([481, 472])], None, array([462, 478])], array([444, 487])], None, array([435, 505])], array([422, 520])], None, array([405, 531])], array([394, 548])], [None, [[None, None, array([412, 590])], [None, [None, None, array([405, 628])], array([395, 611])], array([393, 592])], array([388, 573])], array([377, 557])], array([360, 549])]
+    # 334, 561
+    print(get_nearest(kd_tree, [334, 573], dim = 2))
